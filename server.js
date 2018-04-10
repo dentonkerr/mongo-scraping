@@ -39,21 +39,21 @@ app.get("/scrape", function (req, res) {
 
         $("p.title").each(function (i, element) {
 
-            var result = {};
+            var results = [];
 
-            result.title = $(this).text();
-            result.link = $(this).children("a").attr("href");
+            results.title = $(this).text();
+            results.link = $(this).children("a").attr("href");
 
-            console.log(result.title);
-            console.log(result.link);
+            console.log(results.title);
+            console.log(results.link);
 
-            db.Article.create(result)
-                .then(function (dbArticle) {
-                    console.log(dbArticle);
-                })
-                .catch(function (err) {
-                    return res.json(err);
-                });
+            results.push({
+                title: results.title,
+                link: results.link
+            });
+
+            console.log(results);
+
         });
     })
 });
