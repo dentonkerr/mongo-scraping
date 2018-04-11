@@ -47,12 +47,28 @@ app.get("/scrape", function (req, res) {
             console.log(results.title);
             console.log(results.link);
 
-            results.push({
-                title: results.title,
-                link: results.link
-            });
+            db.Article.create(results)
+                .then(function (dbArticle) {
+                    console.log(dbArticle);
+                })
+                .catch(function (err) {
+                    return res.json(err);
+                });
 
-            console.log(results);
+            db.Article.find({})
+                .then(function (dbArticle) {
+                    res.json(dbArticle);
+                })
+                .catch(function (err) {
+                    res.json(err);
+                });
+
+            // results.push({
+            //     title: results.title,
+            //     link: results.link
+            // });
+
+            // console.log(results);
 
         });
     })
