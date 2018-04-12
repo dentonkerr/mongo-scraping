@@ -12,3 +12,7 @@
     float: right;
     width: 40%;
 }
+
+#addNote.btn {
+    float: right;
+}
