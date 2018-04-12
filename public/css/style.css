@@ -1,0 +1,14 @@
+#addNote {
+    background-color: red;
+    color: white;
+}
+
+#articles {
+    display: inline-block;
+    width: 60%;
+}
+
+#notes {
+    float: right;
+    width: 40%;
+}

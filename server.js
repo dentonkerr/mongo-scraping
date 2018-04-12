@@ -23,55 +23,71 @@ app.use(express.static("public"));
 // Connect to the Mongo DB
 mongoose.connect("mongodb://localhost/mongoScraping");
 
-//Set up handlebars
-app.engine("handlebars", exphbs({ defaultLayout: "main" }));
-app.set("view engine", "handlebars");
-
 // test connection
 app.get("/", function (req, res) {
     res.send("Hello world");
 });
 
 app.get("/scrape", function (req, res) {
-    axios.get("https://www.reddit.com/r/sports/").then(function (response) {
-
+    let url = "https://www.nytimes.com/section/sports/"
+    axios.get(url).then(function (response) {
+        //console.log('resp', response)
         var $ = cheerio.load(response.data);
+        var results = []
+        $("a.story-link").each(function (i, element) {
 
-        $("p.title").each(function (i, element) {
+            var result = {}
 
-            var results = [];
+            result.title = $(this).children().children('h2').text().trim()
+            result.link = $(this).attr("href");
+            result.description = $(this).children().children('p').text();
 
-            results.title = $(this).text();
-            results.link = $(this).children("a").attr("href");
+            console.log('title', result.title);
+            console.log('link', result.link);
+            console.log('description', result.description);
 
-            console.log(results.title);
-            console.log(results.link);
-
-            db.Article.create(results)
-                .then(function (dbArticle) {
-                    console.log(dbArticle);
-                })
-                .catch(function (err) {
-                    return res.json(err);
-                });
-
-            db.Article.find({})
-                .then(function (dbArticle) {
-                    res.json(dbArticle);
-                })
-                .catch(function (err) {
-                    res.json(err);
-                });
-
-            // results.push({
-            //     title: results.title,
-            //     link: results.link
-            // });
-
-            // console.log(results);
+            results.push(result);
 
         });
-    })
+        db.Article.create(results)
+            .then(function (dbArticle) {
+                db.Article.find({})
+                    .then(function (articles) {
+                        console.log('articles', articles)
+                        res.json(articles);
+                    })
+                    .catch(function (err) {
+                        res.json(err);
+                    });
+            })
+            .catch(function (err) {
+                return res.json(err);
+            });
+    });
+});
+
+app.get("/articles/:id", function (req, res) {
+    db.Article.findOne({ _id: req.params.id })
+        .populate("note")
+        .then(function (dbArticle) {
+            res.json(dbArticle);
+        })
+        .catch(function (err) {
+            res.json(err);
+        });
+});
+
+app.post("/articles/:id", function (req, res) {
+    db.Note.create(req.body)
+        .then(function (dbNote) {
+            return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
+        })
+        .then(function (dbArticle) {
+            res.json(dbArticle);
+        })
+        .catch(function (err) {
+            res.json(err);
+        });
 });
 
 // Start the server
